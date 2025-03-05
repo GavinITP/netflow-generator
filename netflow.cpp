@@ -173,6 +173,20 @@ NetflowPayload createHttpFlow()
     return payload;
 }
 
+NetflowPayload createHttpsFlow()
+{
+    NetflowPayload payload;
+    payload.srcIP = ipToUint32("192.168.20.10");
+    payload.dstIP = ipToUint32("202.12.190.10");
+    payload.nextHopIP = ipToUint32("172.199.15.1");
+    payload.srcPort = static_cast<uint16_t>(40);
+    payload.dstPort = static_cast<uint16_t>(HTTPS_PORT);
+
+    fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
+
+    return payload;
+}
+
 NetflowPayload fillCommonFields(
     NetflowPayload &payload,
     int numPktOct,
