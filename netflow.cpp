@@ -203,6 +203,22 @@ NetflowPayload createHttpAltFlow()
     return payload;
 }
 
+NetflowPayload createDnsFlow()
+{
+    NetflowPayload payload;
+
+    payload.srcIP = ipToUint32("59.220.158.122");
+    payload.dstIP = ipToUint32("10.12.233.210");
+    payload.nextHopIP = ipToUint32("39.199.15.1");
+    payload.srcPort = static_cast<uint16_t>(9221);
+    payload.dstPort = static_cast<uint16_t>(DNS_PORT);
+    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+
+    fillCommonFields(payload, PAYLOAD_AVG_MD, 17, rand() % 32);
+
+    return payload;
+}
+
 NetflowPayload fillCommonFields(
     NetflowPayload &payload,
     int numPktOct,
