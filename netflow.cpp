@@ -99,7 +99,7 @@ NetflowHeader createNetFlowHeader(int recordCount)
     return header;
 }
 
-std::vector<NetflowPayload> createNFlowPayload(int recordCount)
+std::vector<NetflowPayload> createNetFlowPayload(int recordCount)
 {
     std::vector<NetflowPayload> payload(recordCount);
     for (int i = 0; i < recordCount; i++)
@@ -157,6 +157,18 @@ std::vector<NetflowPayload> createNFlowPayload(int recordCount)
         }
     }
     return payload;
+}
+
+Netflow generateNetflow(int recordCount)
+{
+    Netflow data;
+    NetflowHeader header = createNetFlowHeader(recordCount);
+    std::vector<NetflowPayload> records = createNetFlowPayload(recordCount);
+
+    data.header = header;
+    data.records = records;
+
+    return data;
 }
 
 NetflowPayload createHttpFlow()
