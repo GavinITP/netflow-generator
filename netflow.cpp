@@ -136,18 +136,45 @@ Netflow generateNetflow(int recordCount)
 std::stringstream serializeNetFlowData(const Netflow &data)
 {
     std::stringstream buffer;
-    // Write the header (in Big Endian format)
-    if (!buffer.write(reinterpret_cast<const char *>(&data.header), sizeof(data.header)))
-    {
-        std::cerr << "Writing netflow header failed." << std::endl;
-    }
-    // Write each record (in Big Endian format)
+    NetflowHeader header = data.header;
+
+    header.version = htons(header.version);
+    header.flowCount = htons(header.flowCount);
+    header.sysUptime = htonl(header.sysUptime);
+    header.unixSec = htonl(header.unixSec);
+    header.unixMsec = htonl(header.unixMsec);
+    header.flowSequence = htonl(header.flowSequence);
+    header.engineType = htons(header.engineType);
+    header.engineId = htons(header.engineId);
+    header.sampleInterval = htons(header.sampleInterval);
+
+    buffer.write(reinterpret_cast<const char *>(&header), sizeof(header));
+
     for (const auto &record : data.records)
     {
-        if (!buffer.write(reinterpret_cast<const char *>(&record), sizeof(record)))
-        {
-            std::cerr << "Writing netflow record failed." << std::endl;
-        }
+        NetflowPayload payload = record;
+
+        payload.srcIp = htonl(payload.srcIp);
+        payload.dstIp = htonl(payload.dstIp);
+        payload.nextHopIp = htonl(payload.nextHopIp);
+        payload.srcPort = htons(payload.srcPort);
+        payload.dstPort = htons(payload.dstPort);
+        payload.ipProtocol = htons(payload.ipProtocol);
+        payload.srcAsNumber = htons(payload.srcAsNumber);
+        payload.dstAsNumber = htons(payload.dstAsNumber);
+        payload.srcPrefixMask = htons(payload.srcPrefixMask);
+        payload.dstPrefixMask = htons(payload.dstPrefixMask);
+        payload.numPackets = htonl(payload.numPackets);
+        payload.numOctets = htonl(payload.numOctets);
+        payload.sysUptimeEnd = htonl(payload.sysUptimeEnd);
+        payload.sysUptimeStart = htonl(payload.sysUptimeStart);
+        payload.snmpInIndex = htons(payload.snmpInIndex);
+        payload.snmpOutIndex = htons(payload.snmpOutIndex);
+        payload.padding1 = 0;
+        payload.padding2 = 0;
+        payload.ipTos = 0;
+
+        buffer.write(reinterpret_cast<const char *>(&payload), sizeof(payload));
     }
 
     return buffer;
