@@ -1,3 +1,5 @@
+#include "netflow.h"
+
 #include <iostream>
 #include <cstring>
 #include <arpa/inet.h>
@@ -21,19 +23,23 @@ int main()
     serverAddr.sin_port = htons(SERVER_PORT);
     inet_pton(AF_INET, SERVER_IP, &serverAddr.sin_addr);
 
-    const char *message = "Hello, UDP Server!";
+    int recordCount = 16;
+    Netflow netflowData = generateNetflow(recordCount);
+    std::stringstream serializedData = serializeNetFlowData(netflowData);
+    std::string serializedStr = serializedData.str();
 
     while (true)
     {
-        ssize_t sentBytes = sendto(sock, message, strlen(message), 0,
+        ssize_t sentBytes = sendto(sock, serializedStr.c_str(), serializedStr.size(), 0,
                                    (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+
         if (sentBytes < 0)
         {
             perror("Send failed");
         }
         else
         {
-            std::cout << "Message sent: " << message << std::endl;
+            std::cout << "NetFlow data sent (" << sentBytes << " bytes)" << std::endl;
         }
 
         usleep(1000000); // microsecs
