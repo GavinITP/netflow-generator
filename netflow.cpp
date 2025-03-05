@@ -299,6 +299,22 @@ NetflowPayload createP2pFlow()
     return payload;
 }
 
+NetflowPayload createRandomFlow()
+{
+    NetflowPayload payload;
+
+    payload.srcIp = rand();
+    payload.dstIp = rand();
+    payload.nextHopIp = rand();
+    payload.srcPort = genRandUint16(UINT16_MAX);
+    payload.dstPort = genRandUint16(UINT16_MAX);
+    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+
+    fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
+
+    return payload;
+}
+
 NetflowPayload fillCommonFields(
     NetflowPayload &payload,
     int numPktOct,
