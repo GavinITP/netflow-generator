@@ -70,3 +70,29 @@ struct Netflow
     NetflowHeader header;
     std::vector<NetflowPayload> records;
 };
+
+NetflowHeader CreateNFlowHeader(int recordCount)
+{
+    auto now = std::chrono::steady_clock::now();
+    auto duration = now.time_since_epoch();
+    long long t = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
+
+    uint32_t sec = static_cast<uint32_t>(t / 1000000000);
+    uint32_t nsec = static_cast<uint32_t>(t - (sec * 1000000000));
+    sysUptime = static_cast<uint32_t>((t - startTime) / 1000000) + 1000;
+
+    flowSequence++;
+
+    NetflowHeader header;
+    header.version = 5;
+    header.flowCount = static_cast<uint16_t>(recordCount);
+    header.sysUptime = sysUptime;
+    header.unixSec = sec;
+    header.unixMsec = nsec;
+    header.flowSequence = flowSequence;
+    header.engineType = 1;
+    header.engineId = 0;
+    header.sampleInterval = 0;
+
+    return header;
+}
