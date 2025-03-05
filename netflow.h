@@ -50,5 +50,25 @@ struct Netflow
 
 Netflow generateNetflow(int recordCount);
 std::stringstream serializeNetFlowData(const Netflow &data);
+NetflowPayload createHttpFlow();
+NetflowPayload createHttpsFlow();
+NetflowPayload createHttpAltFlow();
+NetflowPayload createDnsFlow();
+NetflowPayload createIcmpFlow();
+NetflowPayload createNtpFlow();
+NetflowPayload createImapsFlow();
+NetflowPayload createMySqlFlow();
+NetflowPayload createSshFlow();
+NetflowPayload createP2pFlow();
+NetflowPayload createBitorrentFlow();
+NetflowPayload createFtpFlow();
+NetflowPayload createSnmpFlow();
+NetflowPayload createRandomFlow();
+
+NetflowPayload fillCommonFields(
+    NetflowPayload &payload,
+    int numPktOct,
+    int ipProtocol,
+    int srcPrefixMask);
 
 #endif
