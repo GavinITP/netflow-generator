@@ -39,7 +39,8 @@ int main()
         }
         else
         {
-            std::cout << "NetFlow data sent (" << sentBytes << " bytes)" << std::endl;
+            std::cout << "NetFlow data sent (" << sentBytes << " bytes) to "
+                      << SERVER_IP << ":" << SERVER_PORT << std::endl;
         }
 
         usleep(1000000); // microsecs
