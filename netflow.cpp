@@ -45,9 +45,9 @@ struct NetflowHeader
 
 struct NetflowPayload
 {
-    uint32_t srcIP;
-    uint32_t dstIP;
-    uint32_t nextHopIP;
+    uint32_t srcIp;
+    uint32_t dstIp;
+    uint32_t nextHopIp;
     uint16_t snmpInIndex;
     uint16_t snmpOutIndex;
     uint32_t numPackets;
@@ -162,9 +162,9 @@ std::vector<NetflowPayload> createNFlowPayload(int recordCount)
 NetflowPayload createHttpFlow()
 {
     NetflowPayload payload;
-    payload.srcIP = ipToUint32("112.10.20.10");
-    payload.dstIP = ipToUint32("172.30.190.10");
-    payload.nextHopIP = ipToUint32("172.199.15.1");
+    payload.srcIp = ipToUint32("112.10.20.10");
+    payload.dstIp = ipToUint32("172.30.190.10");
+    payload.nextHopIp = ipToUint32("172.199.15.1");
     payload.srcPort = static_cast<uint16_t>(40);
     payload.dstPort = static_cast<uint16_t>(HTTP_PORT);
 
@@ -176,9 +176,9 @@ NetflowPayload createHttpFlow()
 NetflowPayload createHttpsFlow()
 {
     NetflowPayload payload;
-    payload.srcIP = ipToUint32("192.168.20.10");
-    payload.dstIP = ipToUint32("202.12.190.10");
-    payload.nextHopIP = ipToUint32("172.199.15.1");
+    payload.srcIp = ipToUint32("192.168.20.10");
+    payload.dstIp = ipToUint32("202.12.190.10");
+    payload.nextHopIp = ipToUint32("172.199.15.1");
     payload.srcPort = static_cast<uint16_t>(40);
     payload.dstPort = static_cast<uint16_t>(HTTPS_PORT);
 
@@ -191,9 +191,9 @@ NetflowPayload createHttpAltFlow()
 {
     NetflowPayload payload;
 
-    payload.srcIP = ipToUint32("10.10.20.122");
-    payload.dstIP = ipToUint32("84.12.190.210");
-    payload.nextHopIP = ipToUint32("192.199.15.1");
+    payload.srcIp = ipToUint32("10.10.20.122");
+    payload.dstIp = ipToUint32("84.12.190.210");
+    payload.nextHopIp = ipToUint32("192.199.15.1");
     payload.srcPort = static_cast<uint16_t>(12001);
     payload.dstPort = static_cast<uint16_t>(HTTPS_ALT_PORT);
     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
@@ -207,14 +207,30 @@ NetflowPayload createDnsFlow()
 {
     NetflowPayload payload;
 
-    payload.srcIP = ipToUint32("59.220.158.122");
-    payload.dstIP = ipToUint32("10.12.233.210");
-    payload.nextHopIP = ipToUint32("39.199.15.1");
+    payload.srcIp = ipToUint32("59.220.158.122");
+    payload.dstIp = ipToUint32("10.12.233.210");
+    payload.nextHopIp = ipToUint32("39.199.15.1");
     payload.srcPort = static_cast<uint16_t>(9221);
     payload.dstPort = static_cast<uint16_t>(DNS_PORT);
     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
 
     fillCommonFields(payload, PAYLOAD_AVG_MD, 17, rand() % 32);
+
+    return payload;
+}
+
+NetflowPayload createIcmpFlow()
+{
+    NetflowPayload payload;
+
+    payload.srcIp = ipToUint32("172.16.50.10");
+    payload.dstIp = ipToUint32("132.12.130.10");
+    payload.nextHopIp = ipToUint32("132.12.130.1");
+    payload.srcPort = 0;
+    payload.dstPort = 0;
+    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+
+    fillCommonFields(payload, 0, 1, rand() % 32);
 
     return payload;
 }
