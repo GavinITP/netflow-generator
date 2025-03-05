@@ -22,6 +22,7 @@ int main()
     inet_pton(AF_INET, SERVER_IP, &serverAddr.sin_addr);
 
     const char *message = "Hello, UDP Server!";
+
     while (true)
     {
         ssize_t sentBytes = sendto(sock, message, strlen(message), 0,

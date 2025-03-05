@@ -49,6 +49,6 @@ struct Netflow
 };
 
 Netflow generateNetflow(int recordCount);
-std::stringstream serializeNetFlowPayload(const Netflow &data);
+std::stringstream serializeNetFlowData(const Netflow &data);
 
 #endif

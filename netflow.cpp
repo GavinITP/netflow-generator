@@ -133,7 +133,7 @@ Netflow generateNetflow(int recordCount)
     return data;
 }
 
-std::stringstream serializeNetFlowPayload(const Netflow &data)
+std::stringstream serializeNetFlowData(const Netflow &data)
 {
     std::stringstream buffer;
     // Write the header (in Big Endian format)
