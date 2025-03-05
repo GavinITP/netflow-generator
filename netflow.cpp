@@ -187,6 +187,22 @@ NetflowPayload createHttpsFlow()
     return payload;
 }
 
+NetflowPayload createHttpAltFlow()
+{
+    NetflowPayload payload;
+
+    payload.srcIP = ipToUint32("10.10.20.122");
+    payload.dstIP = ipToUint32("84.12.190.210");
+    payload.nextHopIP = ipToUint32("192.199.15.1");
+    payload.srcPort = static_cast<uint16_t>(12001);
+    payload.dstPort = static_cast<uint16_t>(HTTPS_ALT_PORT);
+    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+
+    fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
+
+    return payload;
+}
+
 NetflowPayload fillCommonFields(
     NetflowPayload &payload,
     int numPktOct,
