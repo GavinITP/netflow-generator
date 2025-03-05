@@ -267,6 +267,22 @@ NetflowPayload createImapsFlow()
     return payload;
 }
 
+NetflowPayload createMySqlFlow()
+{
+    NetflowPayload payload;
+
+    payload.srcIp = ipToUint32("10.154.20.12");
+    payload.dstIp = ipToUint32("77.12.190.94");
+    payload.nextHopIp = ipToUint32("150.20.145.1");
+    payload.srcPort = static_cast<uint16_t>(9010);
+    payload.dstPort = static_cast<uint16_t>(MYSQL_PORT);
+    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+
+    fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
+
+    return payload;
+}
+
 NetflowPayload createP2pFlow()
 {
     NetflowPayload payload;
