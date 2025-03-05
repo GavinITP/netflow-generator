@@ -3,6 +3,9 @@
 #include <cstdint>
 #include "utils.h"
 #include <cstdlib>
+#include <arpa/inet.h>
+#include <sstream>
+#include <iostream>
 
 enum Port
 {
@@ -169,6 +172,26 @@ Netflow generateNetflow(int recordCount)
     data.records = records;
 
     return data;
+}
+
+std::stringstream serializeNetFlowPayload(const Netflow &data)
+{
+    std::stringstream buffer;
+    // Write the header (in Big Endian format)
+    if (!buffer.write(reinterpret_cast<const char *>(&data.header), sizeof(data.header)))
+    {
+        std::cerr << "Writing netflow header failed." << std::endl;
+    }
+    // Write each record (in Big Endian format)
+    for (const auto &record : data.records)
+    {
+        if (!buffer.write(reinterpret_cast<const char *>(&record), sizeof(record)))
+        {
+            std::cerr << "Writing netflow record failed." << std::endl;
+        }
+    }
+
+    return buffer;
 }
 
 NetflowPayload createHttpFlow()
