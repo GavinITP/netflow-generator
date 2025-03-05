@@ -18,6 +18,12 @@ enum Port
     BITTORRENT_PORT = 6682
 };
 
+enum PayloadSize
+{
+    PAYLOAD_AVG_MD = 1024,
+    PAYLOAD_AVG_SM = 256
+};
+
 long long startTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 uint32_t sysUptime = 0;
 uint32_t flowSequence = 0;
