@@ -5,17 +5,19 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <thread>
 
 #define SERVER_IP "192.168.120.58"
 #define SERVER_PORT 9995
+#define THREAD_COUNT 4
 
-int main()
+void sendNetFlowData()
 {
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0)
     {
         perror("Socket creation failed");
-        return 1;
+        return;
     }
 
     sockaddr_in serverAddr;
@@ -23,29 +25,33 @@ int main()
     serverAddr.sin_port = htons(SERVER_PORT);
     inet_pton(AF_INET, SERVER_IP, &serverAddr.sin_addr);
 
-    int recordCount = 16;
+    int recordCount = 64; 
     Netflow netflowData = generateNetflow(recordCount);
     std::stringstream serializedData = serializeNetFlowData(netflowData);
     std::string serializedStr = serializedData.str();
 
     while (true)
     {
-        ssize_t sentBytes = sendto(sock, serializedStr.c_str(), serializedStr.size(), 0,
-                                   (struct sockaddr *)&serverAddr, sizeof(serverAddr));
-
-        if (sentBytes < 0)
-        {
-            perror("Send failed");
-        }
-        else
-        {
-            std::cout << "NetFlow data sent (" << sentBytes << " bytes) to "
-                      << SERVER_IP << ":" << SERVER_PORT << std::endl;
-        }
-
-        usleep(1000000); // microsecs
+        sendto(sock, serializedStr.c_str(), serializedStr.size(), 0,
+               (struct sockaddr *)&serverAddr, sizeof(serverAddr));
     }
 
     close(sock);
+}
+
+int main()
+{
+    std::vector<std::thread> threads;
+    
+    for (int i = 0; i < THREAD_COUNT; i++)
+    {
+        threads.emplace_back(sendNetFlowData);
+    }
+
+    for (auto &t : threads)
+    {
+        t.join();
+    }
+
     return 0;
 }
