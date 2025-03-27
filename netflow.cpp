@@ -98,9 +98,12 @@ Netflow generateNetflow(int recordCount)
     return data;
 }
 
-std::stringstream serializeNetFlowData(const Netflow &data)
+std::string serializeNetFlowData(const Netflow &data)
 {
-    std::stringstream buffer;
+    size_t totalSize = sizeof(NetflowHeader) + data.records.size() * sizeof(NetflowPayload);
+    std::string buffer;
+    buffer.reserve(totalSize);
+
     NetflowHeader header = data.header;
 
     header.version = htons(header.version);
@@ -113,9 +116,9 @@ std::stringstream serializeNetFlowData(const Netflow &data)
     header.engineId = htons(header.engineId);
     header.sampleInterval = htons(header.sampleInterval);
 
-    buffer.write(reinterpret_cast<const char *>(&header), sizeof(header));
+    buffer.append(reinterpret_cast<const char *>(&header), sizeof(header));
 
-    for (const auto &record : data.records)
+    for (const NetflowPayload &record : data.records)
     {
         NetflowPayload payload = record;
 
@@ -139,11 +142,12 @@ std::stringstream serializeNetFlowData(const Netflow &data)
         payload.padding2 = 0;
         payload.ipTos = 0;
 
-        buffer.write(reinterpret_cast<const char *>(&payload), sizeof(payload));
+        buffer.append(reinterpret_cast<const char *>(&payload), sizeof(payload));
     }
 
     return buffer;
 }
+
 
 // NetflowPayload createHttpFlow()
 // {

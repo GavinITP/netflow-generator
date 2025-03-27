@@ -49,7 +49,7 @@ struct Netflow
 };
 
 Netflow generateNetflow(int recordCount);
-std::stringstream serializeNetFlowData(const Netflow &data);
+std::string serializeNetFlowData(const Netflow &data);
 NetflowPayload createHttpFlow();
 NetflowPayload createHttpsFlow();
 NetflowPayload createHttpAltFlow();
