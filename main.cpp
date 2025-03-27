@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <thread>
 
-#define SERVER_IP "192.168.120.58"
+#define SERVER_IP "192.168.119.58"
 #define SERVER_PORT 9995
 #define THREAD_COUNT 4
 
@@ -25,7 +25,7 @@ void sendNetFlowData()
     serverAddr.sin_port = htons(SERVER_PORT);
     inet_pton(AF_INET, SERVER_IP, &serverAddr.sin_addr);
 
-    int recordCount = 64; 
+    int recordCount = 16; 
     Netflow netflowData = generateNetflow(recordCount);
     std::stringstream serializedData = serializeNetFlowData(netflowData);
     std::string serializedStr = serializedData.str();
@@ -46,6 +46,7 @@ int main()
     for (int i = 0; i < THREAD_COUNT; i++)
     {
         threads.emplace_back(sendNetFlowData);
+        std::cout << "Thread " << i << " started" << std::endl;
     }
 
     for (auto &t : threads)

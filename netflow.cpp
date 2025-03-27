@@ -69,57 +69,22 @@ std::vector<NetflowPayload> createNetFlowPayload(int recordCount)
         switch (i % 16)
         {
         case 0:
-            payload[i] = createHttpFlow();
-            break;
-        case 1:
             payload[i] = createHttpsFlow();
             break;
-        case 2:
-            payload[i] = createHttpAltFlow();
-            break;
-        case 3:
+        case 1:
             payload[i] = createDnsFlow();
             break;
-        case 4:
+        case 2:
             payload[i] = createIcmpFlow();
             break;
-        case 5:
-            payload[i] = createNtpFlow();
-            break;
-        case 6:
-            payload[i] = createImapsFlow();
-            break;
-        case 7:
-            payload[i] = createMySqlFlow();
-            break;
-        case 8:
-            payload[i] = createRandomFlow();
-            break;
-        case 9:
+        case 3:
             payload[i] = createSshFlow();
             break;
-        case 10:
-            payload[i] = createP2pFlow();
-            break;
-        case 11:
-            payload[i] = createBitorrentFlow();
-            break;
-        case 12:
-            payload[i] = createFtpFlow();
-            break;
-        case 13:
-            payload[i] = createSnmpFlow();
-            break;
-        case 14:
-            payload[i] = createIcmpFlow();
-            break;
-        case 15:
-            payload[i] = createRandomFlow();
-            break;
-        }
+    }
     }
     return payload;
 }
+
 
 Netflow generateNetflow(int recordCount)
 {
@@ -180,19 +145,19 @@ std::stringstream serializeNetFlowData(const Netflow &data)
     return buffer;
 }
 
-NetflowPayload createHttpFlow()
-{
-    NetflowPayload payload;
-    payload.srcIp = ipToUint32("112.10.20.10");
-    payload.dstIp = ipToUint32("172.30.190.10");
-    payload.nextHopIp = ipToUint32("172.199.15.1");
-    payload.srcPort = static_cast<uint16_t>(40);
-    payload.dstPort = static_cast<uint16_t>(HTTP_PORT);
+// NetflowPayload createHttpFlow()
+// {
+//     NetflowPayload payload;
+//     payload.srcIp = ipToUint32("112.10.20.10");
+//     payload.dstIp = ipToUint32("172.30.190.10");
+//     payload.nextHopIp = ipToUint32("172.199.15.1");
+//     payload.srcPort = static_cast<uint16_t>(40);
+//     payload.dstPort = static_cast<uint16_t>(HTTP_PORT);
 
-    fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
+//     fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
 
-    return payload;
-}
+//     return payload;
+// }
 
 NetflowPayload createHttpsFlow()
 {
@@ -208,27 +173,27 @@ NetflowPayload createHttpsFlow()
     return payload;
 }
 
-NetflowPayload createHttpAltFlow()
-{
-    NetflowPayload payload;
+// NetflowPayload createHttpAltFlow()
+// {
+//     NetflowPayload payload;
 
-    payload.srcIp = ipToUint32("10.10.20.122");
-    payload.dstIp = ipToUint32("84.12.190.210");
-    payload.nextHopIp = ipToUint32("192.199.15.1");
-    payload.srcPort = static_cast<uint16_t>(12001);
-    payload.dstPort = static_cast<uint16_t>(HTTPS_ALT_PORT);
-    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+//     payload.srcIp = ipToUint32("10.10.20.122");
+//     payload.dstIp = ipToUint32("84.12.190.210");
+//     payload.nextHopIp = ipToUint32("192.199.15.1");
+//     payload.srcPort = static_cast<uint16_t>(12001);
+//     payload.dstPort = static_cast<uint16_t>(HTTPS_ALT_PORT);
+//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
 
-    fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
+//     fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
 
-    return payload;
-}
+//     return payload;
+// }
 
 NetflowPayload createDnsFlow()
 {
     NetflowPayload payload;
 
-    payload.srcIp = ipToUint32("59.220.158.122");
+    payload.srcIp = ipToUint32("192.168.20.10");
     payload.dstIp = ipToUint32("10.12.233.210");
     payload.nextHopIp = ipToUint32("39.199.15.1");
     payload.srcPort = static_cast<uint16_t>(9221);
@@ -244,7 +209,7 @@ NetflowPayload createIcmpFlow()
 {
     NetflowPayload payload;
 
-    payload.srcIp = ipToUint32("172.16.50.10");
+    payload.srcIp = ipToUint32("192.168.58.222");
     payload.dstIp = ipToUint32("132.12.130.10");
     payload.nextHopIp = ipToUint32("132.12.130.1");
     payload.srcPort = 0;
@@ -256,59 +221,59 @@ NetflowPayload createIcmpFlow()
     return payload;
 }
 
-NetflowPayload createNtpFlow()
-{
-    NetflowPayload payload;
+// NetflowPayload createNtpFlow()
+// {
+//     NetflowPayload payload;
 
-    payload.srcIp = ipToUint32("247.104.20.202");
-    payload.dstIp = ipToUint32("10.12.190.10");
-    payload.nextHopIp = ipToUint32("192.199.15.1");
-    payload.srcPort = static_cast<uint16_t>(40);
-    payload.dstPort = static_cast<uint16_t>(NTP_PORT);
-    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+//     payload.srcIp = ipToUint32("247.104.20.202");
+//     payload.dstIp = ipToUint32("10.12.190.10");
+//     payload.nextHopIp = ipToUint32("192.199.15.1");
+//     payload.srcPort = static_cast<uint16_t>(40);
+//     payload.dstPort = static_cast<uint16_t>(NTP_PORT);
+//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
 
-    fillCommonFields(payload, PAYLOAD_AVG_MD, 17, 32);
+//     fillCommonFields(payload, PAYLOAD_AVG_MD, 17, 32);
 
-    return payload;
-}
+//     return payload;
+// }
 
-NetflowPayload createImapsFlow()
-{
-    NetflowPayload payload;
+// NetflowPayload createImapsFlow()
+// {
+//     NetflowPayload payload;
 
-    payload.srcIp = ipToUint32("172.30.20.102");
-    payload.dstIp = ipToUint32("62.12.190.10");
-    payload.nextHopIp = ipToUint32("131.199.15.1");
-    payload.srcPort = static_cast<uint16_t>(9010);
-    payload.dstPort = static_cast<uint16_t>(IMAPS_PORT);
-    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+//     payload.srcIp = ipToUint32("172.30.20.102");
+//     payload.dstIp = ipToUint32("62.12.190.10");
+//     payload.nextHopIp = ipToUint32("131.199.15.1");
+//     payload.srcPort = static_cast<uint16_t>(9010);
+//     payload.dstPort = static_cast<uint16_t>(IMAPS_PORT);
+//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
 
-    fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
+//     fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
 
-    return payload;
-}
+//     return payload;
+// }
 
-NetflowPayload createMySqlFlow()
-{
-    NetflowPayload payload;
+// NetflowPayload createMySqlFlow()
+// {
+//     NetflowPayload payload;
 
-    payload.srcIp = ipToUint32("10.154.20.12");
-    payload.dstIp = ipToUint32("77.12.190.94");
-    payload.nextHopIp = ipToUint32("150.20.145.1");
-    payload.srcPort = static_cast<uint16_t>(9010);
-    payload.dstPort = static_cast<uint16_t>(MYSQL_PORT);
-    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+//     payload.srcIp = ipToUint32("10.154.20.12");
+//     payload.dstIp = ipToUint32("77.12.190.94");
+//     payload.nextHopIp = ipToUint32("150.20.145.1");
+//     payload.srcPort = static_cast<uint16_t>(9010);
+//     payload.dstPort = static_cast<uint16_t>(MYSQL_PORT);
+//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
 
-    fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
+//     fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
 
-    return payload;
-}
+//     return payload;
+// }
 
 NetflowPayload createSshFlow()
 {
     NetflowPayload payload;
 
-    payload.srcIp = ipToUint32("172.30.20.102");
+    payload.srcIp = ipToUint32("192.168.4.200");
     payload.dstIp = ipToUint32("222.12.190.10");
     payload.nextHopIp = ipToUint32("192.199.15.1");
     payload.srcPort = static_cast<uint16_t>(40);
@@ -320,85 +285,85 @@ NetflowPayload createSshFlow()
     return payload;
 }
 
-NetflowPayload createP2pFlow()
-{
-    NetflowPayload payload;
+// NetflowPayload createP2pFlow()
+// {
+//     NetflowPayload payload;
 
-    payload.srcIp = ipToUint32("247.104.20.202");
-    payload.dstIp = ipToUint32("10.12.190.10");
-    payload.nextHopIp = ipToUint32("192.199.15.1");
-    payload.srcPort = static_cast<uint16_t>(40);
-    payload.dstPort = static_cast<uint16_t>(P2P_PORT);
-    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+//     payload.srcIp = ipToUint32("247.104.20.202");
+//     payload.dstIp = ipToUint32("10.12.190.10");
+//     payload.nextHopIp = ipToUint32("192.199.15.1");
+//     payload.srcPort = static_cast<uint16_t>(40);
+//     payload.dstPort = static_cast<uint16_t>(P2P_PORT);
+//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
 
-    fillCommonFields(payload, PAYLOAD_AVG_MD, 17, 32);
+//     fillCommonFields(payload, PAYLOAD_AVG_MD, 17, 32);
 
-    return payload;
-}
+//     return payload;
+// }
 
-NetflowPayload createBitorrentFlow()
-{
-    NetflowPayload payload;
+// NetflowPayload createBitorrentFlow()
+// {
+//     NetflowPayload payload;
 
-    payload.srcIp = ipToUint32("192.168.20.202");
-    payload.dstIp = ipToUint32("42.12.190.10");
-    payload.nextHopIp = ipToUint32("192.199.15.1");
-    payload.srcPort = static_cast<uint16_t>(40);
-    payload.dstPort = static_cast<uint16_t>(BITTORRENT_PORT);
-    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+//     payload.srcIp = ipToUint32("192.168.20.202");
+//     payload.dstIp = ipToUint32("42.12.190.10");
+//     payload.nextHopIp = ipToUint32("192.199.15.1");
+//     payload.srcPort = static_cast<uint16_t>(40);
+//     payload.dstPort = static_cast<uint16_t>(BITTORRENT_PORT);
+//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
 
-    fillCommonFields(payload, PAYLOAD_AVG_MD, 17, 32);
+//     fillCommonFields(payload, PAYLOAD_AVG_MD, 17, 32);
 
-    return payload;
-}
+//     return payload;
+// }
 
-NetflowPayload createFtpFlow()
-{
-    NetflowPayload payload;
+// NetflowPayload createFtpFlow()
+// {
+//     NetflowPayload payload;
 
-    payload.srcIp = ipToUint32("112.10.100.10");
-    payload.dstIp = ipToUint32("192.168.120.10");
-    payload.nextHopIp = ipToUint32("172.199.15.1");
-    payload.srcPort = static_cast<uint16_t>(40);
-    payload.dstPort = static_cast<uint16_t>(FTP_PORT);
-    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+//     payload.srcIp = ipToUint32("112.10.100.10");
+//     payload.dstIp = ipToUint32("192.168.120.10");
+//     payload.nextHopIp = ipToUint32("172.199.15.1");
+//     payload.srcPort = static_cast<uint16_t>(40);
+//     payload.dstPort = static_cast<uint16_t>(FTP_PORT);
+//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
 
-    fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
+//     fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
 
-    return payload;
-}
+//     return payload;
+// }
 
-NetflowPayload createSnmpFlow()
-{
-    NetflowPayload payload;
+// NetflowPayload createSnmpFlow()
+// {
+//     NetflowPayload payload;
 
-    payload.srcIp = ipToUint32("112.10.20.10");
-    payload.dstIp = ipToUint32("172.30.190.10");
-    payload.nextHopIp = ipToUint32("172.199.15.1");
-    payload.srcPort = static_cast<uint16_t>(40);
-    payload.dstPort = static_cast<uint16_t>(SNMP_PORT);
-    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+//     payload.srcIp = ipToUint32("112.10.20.10");
+//     payload.dstIp = ipToUint32("172.30.190.10");
+//     payload.nextHopIp = ipToUint32("172.199.15.1");
+//     payload.srcPort = static_cast<uint16_t>(40);
+//     payload.dstPort = static_cast<uint16_t>(SNMP_PORT);
+//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
 
-    fillCommonFields(payload, PAYLOAD_AVG_MD, 17, rand() % 32);
+//     fillCommonFields(payload, PAYLOAD_AVG_MD, 17, rand() % 32);
 
-    return payload;
-}
+//     return payload;
+// }
 
-NetflowPayload createRandomFlow()
-{
-    NetflowPayload payload;
+// NetflowPayload createRandomFlow()
+// {
+//     NetflowPayload payload;
 
-    payload.srcIp = rand();
-    payload.dstIp = rand();
-    payload.nextHopIp = rand();
-    payload.srcPort = genRandUint16(UINT16_MAX);
-    payload.dstPort = genRandUint16(UINT16_MAX);
-    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+//     payload.srcIp = rand();
+//     payload.dstIp = rand();
+//     payload.nextHopIp = rand();
+//     payload.srcPort = genRandUint16(UINT16_MAX);
+//     payload.dstPort = genRandUint16(UINT16_MAX);
+//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
 
-    fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
+//     fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
 
-    return payload;
-}
+//     return payload;
+// }
 
 NetflowPayload fillCommonFields(
     NetflowPayload &payload,
