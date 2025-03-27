@@ -99,8 +99,8 @@ int main()
     pcap_dump_close(dumper);
     pcap_close(pcap);
 
-    std::cout << "Done. Wrote " << totalBytes / (1024.0 * 1024.0) << " MB (~"
-              << (totalBytes * 8 / 1e9) << " Gbps for ~10s)" << std::endl;
+    std::cout << "Done. Wrote " << totalBytes / (1024.0 * 1024.0) << " MB"
+              << (totalBytes * 8 / 1e9) << " Gbps)" << std::endl;
 
     return 0;
 }
