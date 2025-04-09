@@ -1,396 +1,234 @@
 #include "netflow.h"
 #include "utils.h"
 
+#include <arpa/inet.h>
 #include <chrono>
-#include <vector>
 #include <cstdint>
 #include <cstdlib>
-#include <arpa/inet.h>
-#include <sstream>
 #include <iostream>
+#include <sstream>
+#include <vector>
 
-enum Port
-{
-    FTP_PORT = 21,
-    SSH_PORT = 22,
-    DNS_PORT = 53,
-    HTTP_PORT = 80,
-    HTTPS_PORT = 443,
-    NTP_PORT = 123,
-    SNMP_PORT = 161,
-    IMAPS_PORT = 993,
-    MYSQL_PORT = 3306,
-    HTTPS_ALT_PORT = 8080,
-    P2P_PORT = 6681,
-    BITTORRENT_PORT = 6682
+enum Port {
+  FTP_PORT = 21,
+  SSH_PORT = 22,
+  DNS_PORT = 53,
+  HTTP_PORT = 80,
+  HTTPS_PORT = 443,
+  NTP_PORT = 123,
+  SNMP_PORT = 161,
+  IMAPS_PORT = 993,
+  MYSQL_PORT = 3306,
+  HTTPS_ALT_PORT = 8080,
+  P2P_PORT = 6681,
+  BITTORRENT_PORT = 6682
 };
 
-enum PayloadSize
-{
-    PAYLOAD_AVG_MD = 1024,
-    PAYLOAD_AVG_SM = 256
-};
+enum PayloadSize { PAYLOAD_AVG_MD = 1024, PAYLOAD_AVG_SM = 256 };
 
-long long startTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+long long startTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                          std::chrono::steady_clock::now().time_since_epoch())
+                          .count();
 uint32_t sysUptime = 0;
 uint32_t flowSequence = 0;
 
-NetflowHeader createNetFlowHeader(int recordCount)
-{
-    auto now = std::chrono::steady_clock::now();
-    auto duration = now.time_since_epoch();
-    long long t = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
+NetflowHeader createNetFlowHeader(int recordCount) {
+  auto now = std::chrono::steady_clock::now();
+  auto duration = now.time_since_epoch();
+  long long t =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
 
-    uint32_t sec = static_cast<uint32_t>(t / 1000000000);
-    uint32_t nsec = static_cast<uint32_t>(t - (sec * 1000000000));
-    sysUptime = static_cast<uint32_t>((t - startTime) / 1000000) + 1000;
+  uint32_t sec = static_cast<uint32_t>(t / 1000000000);
+  uint32_t nsec = static_cast<uint32_t>(t - (sec * 1000000000));
+  sysUptime = static_cast<uint32_t>((t - startTime) / 1000000) + 1000;
 
-    flowSequence++;
+  flowSequence++;
 
-    NetflowHeader header;
-    header.version = 5;
-    header.flowCount = static_cast<uint16_t>(recordCount);
-    header.sysUptime = sysUptime;
-    header.unixSec = sec;
-    header.unixMsec = nsec;
-    header.flowSequence = flowSequence;
-    header.engineType = 1;
-    header.engineId = 0;
-    header.sampleInterval = 0;
+  NetflowHeader header;
+  header.version = 5;
+  header.flowCount = static_cast<uint16_t>(recordCount);
+  header.sysUptime = sysUptime;
+  header.unixSec = sec;
+  header.unixMsec = nsec;
+  header.flowSequence = flowSequence;
+  header.engineType = 1;
+  header.engineId = 0;
+  header.sampleInterval = 0;
 
-    return header;
+  return header;
 }
 
-std::vector<NetflowPayload> createNetFlowPayload(int recordCount)
-{
-    std::vector<NetflowPayload> payload(recordCount);
-    for (int i = 0; i < recordCount; i++)
-    {
-        switch (i % 16)
-        {
-        case 0:
-            payload[i] = createHttpsFlow();
-            break;
-        case 1:
-            payload[i] = createDnsFlow();
-            break;
-        case 2:
-            payload[i] = createIcmpFlow();
-            break;
-        case 3:
-            payload[i] = createSshFlow();
-            break;
-    }
-    }
-    return payload;
+NetflowPayload flowLtoR() {
+  NetflowPayload payload;
+  int leftHost = rand() % (254 - 130 + 1) + 130;
+  int rightHost = rand() % (126 - 2 + 1) + 2;
+  char lIP[16], rIP[16];
+
+  snprintf(lIP, sizeof(lIP), "192.168.191.%d", leftHost);
+  snprintf(rIP, sizeof(rIP), "192.168.191.%d", rightHost);
+
+  payload.srcIp = ipToUint32(std::string(lIP));
+  payload.dstIp = ipToUint32(std::string(rIP));
+  payload.nextHopIp = ipToUint32("192.168.191.129");
+
+  payload.srcPort = static_cast<uint16_t>(rand() % 64512 + 1024);
+  payload.dstPort = HTTP_PORT;
+
+  payload.snmpInIndex = 2;
+  payload.snmpOutIndex = 3;
+
+  fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
+  return payload;
 }
 
+NetflowPayload flowRtoL() {
+  NetflowPayload payload;
+  int rightHost = rand() % (126 - 2 + 1) + 2;
+  int leftHost = rand() % (254 - 130 + 1) + 130;
+  char rIP[16], lIP[16];
 
-Netflow generateNetflow(int recordCount)
-{
-    Netflow data;
-    NetflowHeader header = createNetFlowHeader(recordCount);
-    std::vector<NetflowPayload> records = createNetFlowPayload(recordCount);
+  snprintf(rIP, sizeof(rIP), "192.168.191.%d", rightHost);
+  snprintf(lIP, sizeof(lIP), "192.168.191.%d", leftHost);
 
-    data.header = header;
-    data.records = records;
+  payload.srcIp = ipToUint32(std::string(rIP));
+  payload.dstIp = ipToUint32(std::string(lIP));
+  payload.nextHopIp = ipToUint32("192.168.191.1");
 
-    return data;
+  payload.srcPort = static_cast<uint16_t>(rand() % 64512 + 1024);
+  payload.dstPort = HTTP_PORT;
+
+  payload.snmpInIndex = 3;
+  payload.snmpOutIndex = 2;
+
+  fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
+  return payload;
 }
 
-std::string serializeNetFlowData(const Netflow &data)
-{
-    size_t totalSize = sizeof(NetflowHeader) + data.records.size() * sizeof(NetflowPayload);
-    std::string buffer;
-    buffer.reserve(totalSize);
+NetflowPayload flowSpoofed() {
+  NetflowPayload payload;
+  int host = rand() % 254 + 1;
+  char spoofIP[16];
+  snprintf(spoofIP, sizeof(spoofIP), "10.0.0.%d", host);
+  payload.srcIp = ipToUint32(std::string(spoofIP));
 
-    NetflowHeader header = data.header;
+  if (rand() % 2 == 0) {
+    int leftHost = rand() % (254 - 130 + 1) + 130;
+    char lIP[16];
+    snprintf(lIP, sizeof(lIP), "192.168.191.%d", leftHost);
+    payload.dstIp = ipToUint32(std::string(lIP));
+    payload.nextHopIp = ipToUint32("192.168.191.129");
+  } else {
+    int rightHost = rand() % (126 - 2 + 1) + 2;
+    char rIP[16];
+    snprintf(rIP, sizeof(rIP), "192.168.191.%d", rightHost);
+    payload.dstIp = ipToUint32(std::string(rIP));
+    payload.nextHopIp = ipToUint32("192.168.191.1");
+  }
 
-    header.version = htons(header.version);
-    header.flowCount = htons(header.flowCount);
-    header.sysUptime = htonl(header.sysUptime);
-    header.unixSec = htonl(header.unixSec);
-    header.unixMsec = htonl(header.unixMsec);
-    header.flowSequence = htonl(header.flowSequence);
-    header.engineType = htons(header.engineType);
-    header.engineId = htons(header.engineId);
-    header.sampleInterval = htons(header.sampleInterval);
+  payload.srcPort = static_cast<uint16_t>(rand() % 64512 + 1024);
+  payload.dstPort = HTTP_PORT;
 
-    buffer.append(reinterpret_cast<const char *>(&header), sizeof(header));
+  payload.snmpInIndex = 2;
+  payload.snmpOutIndex = 3;
 
-    for (const NetflowPayload &record : data.records)
-    {
-        NetflowPayload payload = record;
-
-        payload.srcIp = htonl(payload.srcIp);
-        payload.dstIp = htonl(payload.dstIp);
-        payload.nextHopIp = htonl(payload.nextHopIp);
-        payload.srcPort = htons(payload.srcPort);
-        payload.dstPort = htons(payload.dstPort);
-        payload.ipProtocol = htons(payload.ipProtocol);
-        payload.srcAsNumber = htons(payload.srcAsNumber);
-        payload.dstAsNumber = htons(payload.dstAsNumber);
-        payload.srcPrefixMask = htons(payload.srcPrefixMask);
-        payload.dstPrefixMask = htons(payload.dstPrefixMask);
-        payload.numPackets = htonl(payload.numPackets);
-        payload.numOctets = htonl(payload.numOctets);
-        payload.sysUptimeEnd = htonl(payload.sysUptimeEnd);
-        payload.sysUptimeStart = htonl(payload.sysUptimeStart);
-        payload.snmpInIndex = htons(payload.snmpInIndex);
-        payload.snmpOutIndex = htons(payload.snmpOutIndex);
-        payload.padding1 = 0;
-        payload.padding2 = 0;
-        payload.ipTos = 0;
-
-        buffer.append(reinterpret_cast<const char *>(&payload), sizeof(payload));
-    }
-
-    return buffer;
+  fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
+  return payload;
 }
 
+std::vector<NetflowPayload> createNetFlowPayload(int recordCount) {
+  std::vector<NetflowPayload> payload(recordCount);
 
-// NetflowPayload createHttpFlow()
-// {
-//     NetflowPayload payload;
-//     payload.srcIp = ipToUint32("112.10.20.10");
-//     payload.dstIp = ipToUint32("172.30.190.10");
-//     payload.nextHopIp = ipToUint32("172.199.15.1");
-//     payload.srcPort = static_cast<uint16_t>(40);
-//     payload.dstPort = static_cast<uint16_t>(HTTP_PORT);
+  for (int i = 0; i < recordCount; ++i) {
+    if (rand() % 2 == 0)
+      payload[i] = flowLtoR();
+    else
+      payload[i] = flowRtoL();
+  }
 
-//     fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
-
-//     return payload;
-// }
-
-NetflowPayload createHttpsFlow()
-{
-    NetflowPayload payload;
-    payload.srcIp = ipToUint32("192.168.20.10");
-    payload.dstIp = ipToUint32("202.12.190.10");
-    payload.nextHopIp = ipToUint32("172.199.15.1");
-    payload.srcPort = static_cast<uint16_t>(40);
-    payload.dstPort = static_cast<uint16_t>(HTTPS_PORT);
-
-    fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
-
-    return payload;
+  return payload;
 }
 
-// NetflowPayload createHttpAltFlow()
-// {
-//     NetflowPayload payload;
+Netflow generateNetflow(int recordCount) {
+  Netflow data;
+  NetflowHeader header = createNetFlowHeader(recordCount);
+  std::vector<NetflowPayload> records = createNetFlowPayload(recordCount);
 
-//     payload.srcIp = ipToUint32("10.10.20.122");
-//     payload.dstIp = ipToUint32("84.12.190.210");
-//     payload.nextHopIp = ipToUint32("192.199.15.1");
-//     payload.srcPort = static_cast<uint16_t>(12001);
-//     payload.dstPort = static_cast<uint16_t>(HTTPS_ALT_PORT);
-//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+  data.header = header;
+  data.records = records;
 
-//     fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
-
-//     return payload;
-// }
-
-NetflowPayload createDnsFlow()
-{
-    NetflowPayload payload;
-
-    payload.srcIp = ipToUint32("192.168.20.10");
-    payload.dstIp = ipToUint32("10.12.233.210");
-    payload.nextHopIp = ipToUint32("39.199.15.1");
-    payload.srcPort = static_cast<uint16_t>(9221);
-    payload.dstPort = static_cast<uint16_t>(DNS_PORT);
-    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
-
-    fillCommonFields(payload, PAYLOAD_AVG_MD, 17, rand() % 32);
-
-    return payload;
+  return data;
 }
 
-NetflowPayload createIcmpFlow()
-{
-    NetflowPayload payload;
+std::string serializeNetFlowData(const Netflow &data) {
+  size_t totalSize =
+      sizeof(NetflowHeader) + data.records.size() * sizeof(NetflowPayload);
+  std::string buffer;
+  buffer.reserve(totalSize);
 
-    payload.srcIp = ipToUint32("192.168.58.222");
-    payload.dstIp = ipToUint32("132.12.130.10");
-    payload.nextHopIp = ipToUint32("132.12.130.1");
-    payload.srcPort = 0;
-    payload.dstPort = 0;
-    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
+  NetflowHeader header = data.header;
 
-    fillCommonFields(payload, 0, 1, rand() % 32);
+  header.version = htons(header.version);
+  header.flowCount = htons(header.flowCount);
+  header.sysUptime = htonl(header.sysUptime);
+  header.unixSec = htonl(header.unixSec);
+  header.unixMsec = htonl(header.unixMsec);
+  header.flowSequence = htonl(header.flowSequence);
+  header.engineType = htons(header.engineType);
+  header.engineId = htons(header.engineId);
+  header.sampleInterval = htons(header.sampleInterval);
 
-    return payload;
-}
+  buffer.append(reinterpret_cast<const char *>(&header), sizeof(header));
 
-// NetflowPayload createNtpFlow()
-// {
-//     NetflowPayload payload;
+  for (const NetflowPayload &record : data.records) {
+    NetflowPayload payload = record;
 
-//     payload.srcIp = ipToUint32("247.104.20.202");
-//     payload.dstIp = ipToUint32("10.12.190.10");
-//     payload.nextHopIp = ipToUint32("192.199.15.1");
-//     payload.srcPort = static_cast<uint16_t>(40);
-//     payload.dstPort = static_cast<uint16_t>(NTP_PORT);
-//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
-
-//     fillCommonFields(payload, PAYLOAD_AVG_MD, 17, 32);
-
-//     return payload;
-// }
-
-// NetflowPayload createImapsFlow()
-// {
-//     NetflowPayload payload;
-
-//     payload.srcIp = ipToUint32("172.30.20.102");
-//     payload.dstIp = ipToUint32("62.12.190.10");
-//     payload.nextHopIp = ipToUint32("131.199.15.1");
-//     payload.srcPort = static_cast<uint16_t>(9010);
-//     payload.dstPort = static_cast<uint16_t>(IMAPS_PORT);
-//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
-
-//     fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
-
-//     return payload;
-// }
-
-// NetflowPayload createMySqlFlow()
-// {
-//     NetflowPayload payload;
-
-//     payload.srcIp = ipToUint32("10.154.20.12");
-//     payload.dstIp = ipToUint32("77.12.190.94");
-//     payload.nextHopIp = ipToUint32("150.20.145.1");
-//     payload.srcPort = static_cast<uint16_t>(9010);
-//     payload.dstPort = static_cast<uint16_t>(MYSQL_PORT);
-//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
-
-//     fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
-
-//     return payload;
-// }
-
-NetflowPayload createSshFlow()
-{
-    NetflowPayload payload;
-
-    payload.srcIp = ipToUint32("192.168.4.200");
-    payload.dstIp = ipToUint32("222.12.190.10");
-    payload.nextHopIp = ipToUint32("192.199.15.1");
-    payload.srcPort = static_cast<uint16_t>(40);
-    payload.dstPort = static_cast<uint16_t>(SSH_PORT);
-    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
-
-    fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
-
-    return payload;
-}
-
-// NetflowPayload createP2pFlow()
-// {
-//     NetflowPayload payload;
-
-//     payload.srcIp = ipToUint32("247.104.20.202");
-//     payload.dstIp = ipToUint32("10.12.190.10");
-//     payload.nextHopIp = ipToUint32("192.199.15.1");
-//     payload.srcPort = static_cast<uint16_t>(40);
-//     payload.dstPort = static_cast<uint16_t>(P2P_PORT);
-//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
-
-//     fillCommonFields(payload, PAYLOAD_AVG_MD, 17, 32);
-
-//     return payload;
-// }
-
-// NetflowPayload createBitorrentFlow()
-// {
-//     NetflowPayload payload;
-
-//     payload.srcIp = ipToUint32("192.168.20.202");
-//     payload.dstIp = ipToUint32("42.12.190.10");
-//     payload.nextHopIp = ipToUint32("192.199.15.1");
-//     payload.srcPort = static_cast<uint16_t>(40);
-//     payload.dstPort = static_cast<uint16_t>(BITTORRENT_PORT);
-//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
-
-//     fillCommonFields(payload, PAYLOAD_AVG_MD, 17, 32);
-
-//     return payload;
-// }
-
-// NetflowPayload createFtpFlow()
-// {
-//     NetflowPayload payload;
-
-//     payload.srcIp = ipToUint32("112.10.100.10");
-//     payload.dstIp = ipToUint32("192.168.120.10");
-//     payload.nextHopIp = ipToUint32("172.199.15.1");
-//     payload.srcPort = static_cast<uint16_t>(40);
-//     payload.dstPort = static_cast<uint16_t>(FTP_PORT);
-//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
-
-//     fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
-
-//     return payload;
-// }
-
-// NetflowPayload createSnmpFlow()
-// {
-//     NetflowPayload payload;
-
-//     payload.srcIp = ipToUint32("112.10.20.10");
-//     payload.dstIp = ipToUint32("172.30.190.10");
-//     payload.nextHopIp = ipToUint32("172.199.15.1");
-//     payload.srcPort = static_cast<uint16_t>(40);
-//     payload.dstPort = static_cast<uint16_t>(SNMP_PORT);
-//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
-
-//     fillCommonFields(payload, PAYLOAD_AVG_MD, 17, rand() % 32);
-
-//     return payload;
-// }
-
-// NetflowPayload createRandomFlow()
-// {
-//     NetflowPayload payload;
-
-//     payload.srcIp = rand();
-//     payload.dstIp = rand();
-//     payload.nextHopIp = rand();
-//     payload.srcPort = genRandUint16(UINT16_MAX);
-//     payload.dstPort = genRandUint16(UINT16_MAX);
-//     payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
-
-//     fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
-
-//     return payload;
-// }
-
-NetflowPayload fillCommonFields(
-    NetflowPayload &payload,
-    int numPktOct,
-    int ipProtocol,
-    int srcPrefixMask)
-{
-    payload.snmpInIndex = static_cast<uint16_t>(rand() % 2);
-    payload.snmpOutIndex = 0;
-    payload.numPackets = genRandUint32(numPktOct);
-    payload.numOctets = genRandUint32(numPktOct);
+    payload.srcIp = htonl(payload.srcIp);
+    payload.dstIp = htonl(payload.dstIp);
+    payload.nextHopIp = htonl(payload.nextHopIp);
+    payload.srcPort = htons(payload.srcPort);
+    payload.dstPort = htons(payload.dstPort);
+    payload.ipProtocol = htons(payload.ipProtocol);
+    payload.srcAsNumber = htons(payload.srcAsNumber);
+    payload.dstAsNumber = htons(payload.dstAsNumber);
+    payload.srcPrefixMask = htons(payload.srcPrefixMask);
+    payload.dstPrefixMask = htons(payload.dstPrefixMask);
+    payload.numPackets = htonl(payload.numPackets);
+    payload.numOctets = htonl(payload.numOctets);
+    payload.sysUptimeEnd = htonl(payload.sysUptimeEnd);
+    payload.sysUptimeStart = htonl(payload.sysUptimeStart);
+    payload.snmpInIndex = htons(payload.snmpInIndex);
+    payload.snmpOutIndex = htons(payload.snmpOutIndex);
     payload.padding1 = 0;
-    payload.ipProtocol = static_cast<uint8_t>(ipProtocol);
-    payload.ipTos = 0;
-    payload.srcAsNumber = genRandUint16(UINT16_MAX);
-    payload.dstAsNumber = genRandUint16(UINT16_MAX);
-    payload.srcPrefixMask = static_cast<uint8_t>(srcPrefixMask);
-    payload.dstPrefixMask = static_cast<uint8_t>(rand() % 32);
     payload.padding2 = 0;
+    payload.ipTos = 0;
 
-    int uptime = static_cast<int>(sysUptime);
-    payload.sysUptimeEnd = static_cast<uint32_t>(uptime - randomNum(10, 500));
-    payload.sysUptimeStart = payload.sysUptimeEnd - static_cast<uint32_t>(randomNum(10, 500));
+    buffer.append(reinterpret_cast<const char *>(&payload), sizeof(payload));
+  }
 
-    return payload;
+  return buffer;
+}
+
+NetflowPayload fillCommonFields(NetflowPayload &payload, int numPktOct,
+                                int ipProtocol, int srcPrefixMask) {
+  payload.numPackets = randomNum(10, 500);
+  payload.numOctets = randomNum(500, 15000);
+
+  payload.padding1 = 0;
+  payload.ipProtocol = static_cast<uint8_t>(ipProtocol);
+  payload.ipTos = randomNum(0, 255);
+
+  payload.srcAsNumber = randomNum(64000, 65000);
+  payload.dstAsNumber = randomNum(64000, 65000);
+
+  payload.srcPrefixMask = static_cast<uint8_t>(srcPrefixMask);
+  payload.dstPrefixMask = 24;
+  payload.padding2 = 0;
+
+  int duration = randomNum(100, 10000);
+  payload.sysUptimeStart = sysUptime - duration;
+  payload.sysUptimeEnd = sysUptime;
+
+  payload.tcpFlags = static_cast<uint8_t>(rand() % 16);
+
+  return payload;
 }
