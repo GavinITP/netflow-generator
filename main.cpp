@@ -1,9 +1,7 @@
 #include "netflow.h"
-#include <chrono>
 #include <cstring>
 #include <iostream>
 #include <pcap.h>
-#include <sstream>
 #include <unistd.h>
 #include <vector>
 
@@ -24,7 +22,6 @@ const uint8_t UDP_BASE_HEADER[8] = {0x04, 0x00, 0x27, 0x0B,
 std::vector<uint8_t> createRawPacket(const char *payload, size_t payloadSize) {
   std::vector<uint8_t> packet;
   packet.reserve(FIXED_PACKET_SIZE);
-
   packet.insert(packet.end(), ETH_HEADER, ETH_HEADER + 14);
 
   uint8_t ip[20];
@@ -42,16 +39,14 @@ std::vector<uint8_t> createRawPacket(const char *payload, size_t payloadSize) {
   packet.insert(packet.end(), udp, udp + 8);
 
   packet.insert(packet.end(), payload, payload + payloadSize);
-
   if (packet.size() < FIXED_PACKET_SIZE)
     packet.resize(FIXED_PACKET_SIZE, 0x00);
-
   return packet;
 }
 
 void generatePcapFile() {
   char filename[64];
-  snprintf(filename, sizeof(filename), "output.pcap");
+  snprintf(filename, sizeof(filename), "10Gbps-4pdu-spoof.pcap");
 
   char errbuf[PCAP_ERRBUF_SIZE];
   pcap_t *pcap = pcap_open_dead(DLT_EN10MB, 65535);
@@ -64,31 +59,18 @@ void generatePcapFile() {
   std::string payloadBuffer;
   size_t totalBytes = 0;
   size_t packetCount = 0;
-
   uint64_t target_ns = TARGET_DURATION_SECONDS * 1000000000ULL;
-  uint64_t dt =
-      (FIXED_PACKET_SIZE * 8) / 10; // dt ~ 667 ns per packet for 10Gbps
+  uint64_t dt = (FIXED_PACKET_SIZE * 8) / 10; // ~667 ns per packet for 10Gbps
   if (dt == 0)
     dt = 1;
 
-  uint64_t nextSpoofTime = rand() % target_ns;
-
   uint64_t sim_ns = 0;
-
   while (sim_ns < target_ns) {
     std::vector<NetflowPayload> flows;
-    if (sim_ns >= nextSpoofTime) {
+    if (sim_ns >= 300000000ULL && sim_ns < 400000000ULL) {
       flows.push_back(flowSpoofed());
-
-      for (int i = 1; i < RECORD_COUNT; i++) {
-        if (rand() % 2 == 0)
-          flows.push_back(flowLtoR());
-        else
-          flows.push_back(flowRtoL());
-      }
-
-      uint64_t remaining = target_ns - sim_ns;
-      nextSpoofTime = sim_ns + (rand() % (remaining > 0 ? remaining : 1));
+      for (int i = 1; i < RECORD_COUNT; i++)
+        flows.push_back(flowSpoofed());
     } else {
       flows = createNetFlowPayload(RECORD_COUNT);
     }
@@ -106,8 +88,8 @@ void generatePcapFile() {
     header.ts.tv_usec = (sim_ns % 1000000000) / 1000;
     header.caplen = packet.size();
     header.len = packet.size();
-
     pcap_dump(reinterpret_cast<u_char *>(dumper), &header, packet.data());
+
     totalBytes += packet.size();
     packetCount++;
     sim_ns += dt;
