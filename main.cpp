@@ -5,9 +5,9 @@
 #include <unistd.h>
 #include <vector>
 
-#define FIXED_PACKET_SIZE 834
-#define RECORD_COUNT 4
-#define TARGET_DURATION_SECONDS 1
+#define RECORD_COUNT 1
+#define PACKET_COUNT 512
+#define TIME_DELTA_NS 1000000ULL // 1 ms between packets
 
 const uint8_t ETH_HEADER[14] = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x11,
                                 0x22, 0x33, 0x44, 0x55, 0x66, 0x08, 0x00};
@@ -21,7 +21,6 @@ const uint8_t UDP_BASE_HEADER[8] = {0x04, 0x00, 0x27, 0x0B,
 
 std::vector<uint8_t> createRawPacket(const char *payload, size_t payloadSize) {
   std::vector<uint8_t> packet;
-  packet.reserve(FIXED_PACKET_SIZE);
   packet.insert(packet.end(), ETH_HEADER, ETH_HEADER + 14);
 
   uint8_t ip[20];
@@ -39,14 +38,12 @@ std::vector<uint8_t> createRawPacket(const char *payload, size_t payloadSize) {
   packet.insert(packet.end(), udp, udp + 8);
 
   packet.insert(packet.end(), payload, payload + payloadSize);
-  if (packet.size() < FIXED_PACKET_SIZE)
-    packet.resize(FIXED_PACKET_SIZE, 0x00);
   return packet;
 }
 
 void generatePcapFile() {
   char filename[64];
-  snprintf(filename, sizeof(filename), "10Gbps-4pdu-spoof.pcap");
+  snprintf(filename, sizeof(filename), "512packets-1pdu.pcap");
 
   char errbuf[PCAP_ERRBUF_SIZE];
   pcap_t *pcap = pcap_open_dead(DLT_EN10MB, 65535);
@@ -56,21 +53,11 @@ void generatePcapFile() {
     return;
   }
 
-  std::string payloadBuffer;
-  size_t totalBytes = 0;
-  size_t packetCount = 0;
-  uint64_t target_ns = TARGET_DURATION_SECONDS * 1000000000ULL;
-  uint64_t dt = (FIXED_PACKET_SIZE * 8) / 10; // ~667 ns per packet for 10Gbps
-  if (dt == 0)
-    dt = 1;
-
   uint64_t sim_ns = 0;
-  while (sim_ns < target_ns) {
+  for (int packetCount = 0; packetCount < PACKET_COUNT; packetCount++) {
     std::vector<NetflowPayload> flows;
     if (sim_ns >= 300000000ULL && sim_ns < 400000000ULL) {
       flows.push_back(flowSpoofed());
-      for (int i = 1; i < RECORD_COUNT; i++)
-        flows.push_back(flowSpoofed());
     } else {
       flows = createNetFlowPayload(RECORD_COUNT);
     }
@@ -78,7 +65,8 @@ void generatePcapFile() {
     Netflow netflow;
     netflow.header = createNetFlowHeader(RECORD_COUNT);
     netflow.records = flows;
-    payloadBuffer = serializeNetFlowData(netflow);
+
+    std::string payloadBuffer = serializeNetFlowData(netflow);
     const char *rawPayload = payloadBuffer.data();
     size_t payloadSize = payloadBuffer.size();
     std::vector<uint8_t> packet = createRawPacket(rawPayload, payloadSize);
@@ -90,17 +78,12 @@ void generatePcapFile() {
     header.len = packet.size();
     pcap_dump(reinterpret_cast<u_char *>(dumper), &header, packet.data());
 
-    totalBytes += packet.size();
-    packetCount++;
-    sim_ns += dt;
+    sim_ns += TIME_DELTA_NS;
   }
 
   pcap_dump_close(dumper);
   pcap_close(pcap);
-  double totalBits = totalBytes * 8;
-  std::cout << "Generated " << packetCount
-            << " packets, simulated throughput: " << (totalBits / 1e9)
-            << " Gbps\n";
+  std::cout << "Generated " << PACKET_COUNT << " packets.\n";
 }
 
 int main() {
