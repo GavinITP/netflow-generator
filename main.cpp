@@ -5,8 +5,8 @@
 #include <unistd.h>
 #include <vector>
 
-#define RECORD_COUNT 1
-#define PACKET_COUNT 512
+#define RECORD_COUNT 30
+#define PACKET_COUNT 1024
 #define TIME_DELTA_NS 1000000ULL // 1 ms between packets
 
 const uint8_t ETH_HEADER[14] = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x11,
@@ -43,7 +43,8 @@ std::vector<uint8_t> createRawPacket(const char *payload, size_t payloadSize) {
 
 void generatePcapFile() {
   char filename[64];
-  snprintf(filename, sizeof(filename), "512packets-1pdu.pcap");
+  snprintf(filename, sizeof(filename), "%dpackets-%dpdu.pcap", PACKET_COUNT,
+           RECORD_COUNT);
 
   char errbuf[PCAP_ERRBUF_SIZE];
   pcap_t *pcap = pcap_open_dead(DLT_EN10MB, 65535);
@@ -56,8 +57,10 @@ void generatePcapFile() {
   uint64_t sim_ns = 0;
   for (int packetCount = 0; packetCount < PACKET_COUNT; packetCount++) {
     std::vector<NetflowPayload> flows;
-    if (sim_ns >= 300000000ULL && sim_ns < 400000000ULL) {
-      flows.push_back(flowSpoofed());
+    if (sim_ns >= 0ULL && sim_ns < 100000000ULL) {
+      for (int i = 0; i < RECORD_COUNT; ++i) {
+        flows.push_back(flowSpoofed());
+      }
     } else {
       flows = createNetFlowPayload(RECORD_COUNT);
     }

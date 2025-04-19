@@ -106,30 +106,42 @@ NetflowPayload flowRtoL() {
 
 NetflowPayload flowSpoofed() {
   NetflowPayload payload;
-  int host = rand() % 254 + 1;
-  char spoofIP[16];
-  snprintf(spoofIP, sizeof(spoofIP), "10.0.0.%d", host);
-  payload.srcIp = ipToUint32(std::string(spoofIP));
+  bool spoofFromRight = rand() % 2 == 0;
 
-  if (rand() % 2 == 0) {
-    int leftHost = rand() % (254 - 130 + 1) + 130;
-    char lIP[16];
-    snprintf(lIP, sizeof(lIP), "192.168.191.%d", leftHost);
-    payload.dstIp = ipToUint32(std::string(lIP));
-    payload.nextHopIp = ipToUint32("192.168.191.129");
-  } else {
+  if (spoofFromRight) {
+    // IP from right side, but appears to come from left
     int rightHost = rand() % (126 - 2 + 1) + 2;
-    char rIP[16];
-    snprintf(rIP, sizeof(rIP), "192.168.191.%d", rightHost);
-    payload.dstIp = ipToUint32(std::string(rIP));
+    char spoofIP[16];
+    snprintf(spoofIP, sizeof(spoofIP), "192.168.191.%d", rightHost);
+    payload.srcIp = ipToUint32(std::string(spoofIP));
+
+    int leftHost = rand() % (254 - 130 + 1) + 130;
+    char dstIP[16];
+    snprintf(dstIP, sizeof(dstIP), "192.168.191.%d", leftHost);
+    payload.dstIp = ipToUint32(std::string(dstIP));
+    payload.nextHopIp = ipToUint32("192.168.191.129");
+
+    payload.snmpInIndex = 2;
+    payload.snmpOutIndex = 3;
+  } else {
+    // IP from left side, but appears to come from right
+    int leftHost = rand() % (254 - 130 + 1) + 130;
+    char spoofIP[16];
+    snprintf(spoofIP, sizeof(spoofIP), "192.168.191.%d", leftHost);
+    payload.srcIp = ipToUint32(std::string(spoofIP));
+
+    int rightHost = rand() % (126 - 2 + 1) + 2;
+    char dstIP[16];
+    snprintf(dstIP, sizeof(dstIP), "192.168.191.%d", rightHost);
+    payload.dstIp = ipToUint32(std::string(dstIP));
     payload.nextHopIp = ipToUint32("192.168.191.1");
+
+    payload.snmpInIndex = 3;
+    payload.snmpOutIndex = 2;
   }
 
   payload.srcPort = static_cast<uint16_t>(rand() % 64512 + 1024);
   payload.dstPort = HTTP_PORT;
-
-  payload.snmpInIndex = 2;
-  payload.snmpOutIndex = 3;
 
   fillCommonFields(payload, PAYLOAD_AVG_MD, 6, rand() % 32);
   return payload;
