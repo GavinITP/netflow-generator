@@ -187,7 +187,7 @@ std::string serializeNetFlowData(const Netflow &data) {
     payload.nextHopIp = htonl(payload.nextHopIp);
     payload.srcPort = htons(payload.srcPort);
     payload.dstPort = htons(payload.dstPort);
-    payload.ipProtocol = htons(payload.ipProtocol);
+    payload.ipProtocol = payload.ipProtocol;  // no need to convert naja
     payload.srcAsNumber = htons(payload.srcAsNumber);
     payload.dstAsNumber = htons(payload.dstAsNumber);
     payload.srcPrefixMask = htons(payload.srcPrefixMask);
