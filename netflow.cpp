@@ -199,7 +199,7 @@ std::string serializeNetFlowData(const Netflow &data) {
     payload.nextHopIp = htonl(payload.nextHopIp);
     payload.srcPort = htons(payload.srcPort);
     payload.dstPort = htons(payload.dstPort);
-    payload.ipProtocol = htons(payload.ipProtocol);
+    payload.ipProtocol = payload.ipProtocol; // no need to convert naja
     payload.srcAsNumber = htons(payload.srcAsNumber);
     payload.dstAsNumber = htons(payload.dstAsNumber);
     payload.srcPrefixMask = htons(payload.srcPrefixMask);
@@ -222,7 +222,7 @@ std::string serializeNetFlowData(const Netflow &data) {
 
 NetflowPayload fillCommonFields(NetflowPayload &payload, int numPktOct,
                                 int ipProtocol, int srcPrefixMask) {
-  payload.numPackets = randomNum(10, 500);
+  payload.numPackets = randomNum(10, 500); 
   payload.numOctets = randomNum(500, 15000);
 
   payload.padding1 = 0;
